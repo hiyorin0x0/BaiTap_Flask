@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Tổng quan{% endblock %}
+{% block content %}
+<div class="eyebrow">DASHBOARD / TỔNG QUAN</div>
+<h1>Quản lý đồ án tốt nghiệp</h1>
+<p class="lead">Hệ thống minh họa kiến trúc hướng dịch vụ. Ba Flask REST API hoạt động độc lập và được sử dụng qua giao diện Client.</p>
+<div class="metrics">
+  <a class="metric" href="{{ url_for('sinhvien') }}"><span class="metric-icon indigo">♙</span><strong>Sinh viên</strong><small>Thêm · Sửa · Xóa · Xem</small><span class="metric-link">Quản lý →</span></a>
+  <a class="metric" href="{{ url_for('detai') }}"><span class="metric-icon emerald">▤</span><strong>Đề tài</strong><small>Tên đề tài · Số lượng tối đa</small><span class="metric-link">Quản lý →</span></a>
+  <a class="metric" href="{{ url_for('dangky') }}"><span class="metric-icon orange">✓</span><strong>Đăng ký</strong><small>Kiểm tra liên dịch vụ qua HTTP</small><span class="metric-link">Quản lý →</span></a>
+</div>
+<section class="panel">
+  <div class="panel-head"><div><h2>Trạng thái dịch vụ</h2><p>Các backend chạy trên cổng khác nhau</p></div><span class="hint">API HEALTH</span></div>
+  <div class="status-grid">
+    {% for name, ok in status.items() %}
+      <div class="status-row"><span class="status-dot {% if ok %}online{% endif %}"></span><div><strong>{{ name|capitalize }} Service</strong><small>{{ services[name] }}</small></div><span class="status-tag {% if ok %}ok{% else %}off{% endif %}">{{ 'Đang chạy' if ok else 'Không kết nối' }}</span></div>
+    {% endfor %}
+  </div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><h2>Luồng hoạt động SOA</h2><p>Ví dụ khi đăng ký một đề tài</p></div></div>
+  <div class="steps"><div class="step"><b>1</b><span>Client gửi POST /api/dangky</span></div><div class="arrow">→</div><div class="step"><b>2</b><span>DangKy gọi SinhVien + DeTai qua REST</span></div><div class="arrow">→</div><div class="step"><b>3</b><span>Kiểm tra sức chứa và lưu SQLite</span></div></div>
+  <div class="note"><strong>Gợi ý trình bày:</strong> Tạo một sinh viên, tạo một đề tài, đăng ký đề tài; sau đó thử đăng ký lại cùng sinh viên để cho thấy quy tắc kiểm tra trùng. Thử dừng dịch vụ Đề tài để chứng minh các dịch vụ chạy độc lập và sự phụ thuộc HTTP khi đăng ký.</div>
+</section>
+{% endblock %}

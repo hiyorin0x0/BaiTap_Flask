@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}SOA Flask Demo{% endblock %} · SOA Graduation</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">S</span><span>SOA<span class="brand-light"> Project</span></span></a>
+      <span class="topbar-note">Flask · REST API · SQLite</span>
+    </div>
+  </header>
+  <div class="page-grid">
+    <aside class="sidebar">
+      <div class="sidebar-label">MENU</div>
+      <a href="{{ url_for('index') }}" class="nav {% if request.endpoint == 'index' %}active{% endif %}">⌂ &nbsp; Tổng quan</a>
+      <a href="{{ url_for('sinhvien') }}" class="nav {% if request.endpoint == 'sinhvien' %}active{% endif %}">♙ &nbsp; Sinh viên</a>
+      <a href="{{ url_for('detai') }}" class="nav {% if request.endpoint == 'detai' %}active{% endif %}">▤ &nbsp; Đề tài</a>
+      <a href="{{ url_for('dangky') }}" class="nav {% if request.endpoint == 'dangky' %}active{% endif %}">✓ &nbsp; Đăng ký</a>
+      <div class="sidebar-bottom"><span class="dot"></span> Phiên bản demo · 2026</div>
+    </aside>
+    <main class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+      <footer>Demo môn Kiến trúc hướng dịch vụ (SOA) · Dữ liệu minh họa, chưa phải CSDL chính thức</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Đăng ký{% endblock %}
+{% block content %}
+<div class="eyebrow">QUẢN LÝ / ĐĂNG KÝ</div><h1>Đăng ký đồ án tốt nghiệp</h1>
+<p class="lead">DangKy Service gọi API của hai service còn lại trước khi lưu đăng ký.</p>
+<div class="workspace">
+  <section class="panel form-panel"><h2>{{ 'Sửa đăng ký' if selected else 'Đăng ký đề tài' }}</h2><p class="subtle">Mỗi sinh viên đăng ký tối đa 1 đề tài</p>
+    <form method="post" action="{{ url_for('save_registration') }}">
+      <input type="hidden" name="mode" value="{{ 'edit' if selected else 'create' }}">
+      {% if selected %}<input type="hidden" name="ma_dk" value="{{ selected.ma_dk }}">{% endif %}
+      <label>Sinh viên</label><select name="ma_sv" required><option value="">-- Chọn sinh viên --</option>
+        {% for sv in students %}<option value="{{ sv.ma_sv }}" {% if selected and sv.ma_sv == selected.ma_sv %}selected{% endif %}>{{ sv.ma_sv }} · {{ sv.ho_ten }}</option>{% endfor %}
+      </select>
+      <label>Đề tài</label><select name="ma_dt" required><option value="">-- Chọn đề tài --</option>
+        {% for dt in topics %}<option value="{{ dt.ma_dt }}" {% if selected and dt.ma_dt == selected.ma_dt %}selected{% endif %}>{{ dt.ma_dt }} · {{ dt.ten_dt }} (tối đa {{ dt.so_luong_toi_da }})</option>{% endfor %}
+      </select>
+      <div class="form-two"><div><label>Điểm hướng dẫn</label><input name="diem_huong_dan" type="number" step="0.01" min="0" max="10" value="{{ selected.diem_huong_dan if selected and selected.diem_huong_dan is not none else '' }}" placeholder="0–10"></div><div><label>Điểm phản biện</label><input name="diem_phan_bien" type="number" step="0.01" min="0" max="10" value="{{ selected.diem_phan_bien if selected and selected.diem_phan_bien is not none else '' }}" placeholder="0–10"></div></div>
+      <div class="form-note">Điểm là tùy chọn. Công thức demo: (điểm hướng dẫn + điểm phản biện) / 2. Chưa có công thức chính thức từ giảng viên.</div>
+      <button class="btn primary" type="submit">{{ 'Lưu thay đổi' if selected else '+ Đăng ký đề tài' }}</button>
+      {% if selected %}<a class="btn secondary" href="{{ url_for('dangky') }}">Hủy chỉnh sửa</a>{% endif %}
+    </form>
+  </section>
+  <section class="panel table-panel"><div class="panel-head"><h2>Danh sách đăng ký</h2><span class="count">{{ rows|length }} đăng ký</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Mã DK</th><th>Sinh viên</th><th>Đề tài</th><th>Ngày đăng ký</th><th>Điểm TB</th><th>Thao tác</th></tr></thead><tbody>
+    {% for item in rows %}<tr><td><strong>#{{ item.ma_dk }}</strong></td><td>{{ item.ma_sv }}<small class="table-sub">{{ student_names.get(item.ma_sv, 'Chưa có dữ liệu SV') }}</small></td><td>{{ item.ma_dt }}<small class="table-sub">{{ topic_names.get(item.ma_dt, 'Chưa có dữ liệu ĐT') }}</small></td><td>{{ item.ngay_dang_ky }}</td><td>{% if item.diem_trung_binh is not none %}<span class="pill score">{{ '%.2f'|format(item.diem_trung_binh) }}</span>{% else %}—{% endif %}</td><td class="actions"><a class="btn small secondary" href="{{ url_for('dangky', edit=item.ma_dk) }}">Sửa</a><form method="post" action="{{ url_for('delete_registration') }}" onsubmit="return confirm('Xóa đăng ký #{{ item.ma_dk }}?');"><input type="hidden" name="ma_dk" value="{{ item.ma_dk }}"><button class="btn small danger" type="submit">Xóa</button></form></td></tr>{% else %}<tr><td colspan="6" class="empty">Chưa có đăng ký. Hãy tạo đăng ký đầu tiên để demo gọi API.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

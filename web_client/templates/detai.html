@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Đề tài{% endblock %}
+{% block content %}
+<div class="eyebrow">QUẢN LÝ / ĐỀ TÀI</div><h1>Danh sách đề tài</h1>
+<p class="lead">Dữ liệu do DeTai Service (cổng 5002) quản lý và trả về dưới dạng JSON.</p>
+<div class="workspace">
+  <section class="panel form-panel"><h2>{{ 'Sửa đề tài' if selected else 'Thêm đề tài' }}</h2><p class="subtle">Khai báo đề tài cho sinh viên đăng ký</p>
+    <form method="post" action="{{ url_for('save_topic') }}">
+      <input type="hidden" name="mode" value="{{ 'edit' if selected else 'create' }}">
+      <label>Mã đề tài</label><input name="ma_dt" required maxlength="20" value="{{ selected.ma_dt if selected else '' }}" {% if selected %}readonly{% endif %} placeholder="DT004">
+      <label>Tên đề tài</label><input name="ten_dt" required maxlength="200" value="{{ selected.ten_dt if selected else '' }}" placeholder="Ứng dụng web...">
+      <label>Mô tả</label><textarea name="mo_ta" rows="3" maxlength="1000" placeholder="Mô tả ngắn">{{ selected.mo_ta if selected else '' }}</textarea>
+      <label>Số sinh viên tối đa</label><input name="so_luong_toi_da" type="number" min="1" max="100" required value="{{ selected.so_luong_toi_da if selected else 2 }}">
+      <button class="btn primary" type="submit">{{ 'Lưu thay đổi' if selected else '+ Thêm đề tài' }}</button>
+      {% if selected %}<a class="btn secondary" href="{{ url_for('detai') }}">Hủy chỉnh sửa</a>{% endif %}
+    </form>
+  </section>
+  <section class="panel table-panel"><div class="panel-head"><h2>Đề tài hiện có</h2><span class="count">{{ rows|length }} đề tài</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Mã ĐT</th><th>Tên đề tài</th><th>Mô tả</th><th>Tối đa</th><th>Thao tác</th></tr></thead><tbody>
+    {% for item in rows %}<tr><td><strong>{{ item.ma_dt }}</strong></td><td>{{ item.ten_dt }}</td><td>{{ item.mo_ta }}</td><td><span class="pill">{{ item.so_luong_toi_da }} SV</span></td><td class="actions"><a class="btn small secondary" href="{{ url_for('detai', edit=item.ma_dt) }}">Sửa</a><form method="post" action="{{ url_for('delete_topic') }}" onsubmit="return confirm('Xóa đề tài {{ item.ma_dt }}? Nếu đã có đăng ký, dữ liệu liên quan sẽ không tự xóa.');"><input type="hidden" name="ma_dt" value="{{ item.ma_dt }}"><button class="btn small danger" type="submit">Xóa</button></form></td></tr>{% else %}<tr><td colspan="5" class="empty">Không có dữ liệu</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

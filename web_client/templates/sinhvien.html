@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Sinh viên{% endblock %}
+{% block content %}
+<div class="eyebrow">QUẢN LÝ / SINH VIÊN</div><h1>Danh sách sinh viên</h1>
+<p class="lead">Dữ liệu do SinhVien Service (cổng 5001) quản lý và trả về dưới dạng JSON.</p>
+<div class="workspace">
+  <section class="panel form-panel">
+    <h2>{{ 'Sửa sinh viên' if selected else 'Thêm sinh viên' }}</h2>
+    <p class="subtle">{{ 'Cập nhật thông tin sinh viên đang chọn' if selected else 'Nhập thông tin sinh viên mới' }}</p>
+    <form action="{{ url_for('save_student') }}" method="post">
+      <input type="hidden" name="mode" value="{{ 'edit' if selected else 'create' }}">
+      <label>Mã sinh viên</label><input name="ma_sv" required maxlength="20" value="{{ selected.ma_sv if selected else '' }}" {% if selected %}readonly{% endif %} placeholder="SV004">
+      <label>Họ và tên</label><input name="ho_ten" required maxlength="100" value="{{ selected.ho_ten if selected else '' }}" placeholder="Nguyễn Văn A">
+      <label>Lớp</label><input name="lop" required maxlength="40" value="{{ selected.lop if selected else '' }}" placeholder="CNTT01">
+      <label>Email</label><input name="email" type="email" required maxlength="120" value="{{ selected.email if selected else '' }}" placeholder="sinhvien@example.edu.vn">
+      <button class="btn primary" type="submit">{{ 'Lưu thay đổi' if selected else '+ Thêm sinh viên' }}</button>
+      {% if selected %}<a class="btn secondary" href="{{ url_for('sinhvien') }}">Hủy chỉnh sửa</a>{% endif %}
+    </form>
+  </section>
+  <section class="panel table-panel"><div class="panel-head"><h2>Sinh viên hiện có</h2><span class="count">{{ rows|length }} sinh viên</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Mã SV</th><th>Họ tên</th><th>Lớp</th><th>Email</th><th>Thao tác</th></tr></thead><tbody>
+    {% for item in rows %}<tr><td><strong>{{ item.ma_sv }}</strong></td><td>{{ item.ho_ten }}</td><td>{{ item.lop }}</td><td>{{ item.email }}</td><td class="actions"><a class="btn small secondary" href="{{ url_for('sinhvien', edit=item.ma_sv) }}">Sửa</a><form method="post" action="{{ url_for('delete_student') }}" onsubmit="return confirm('Xóa sinh viên {{ item.ma_sv }}? Nếu đã có đăng ký, dữ liệu liên quan sẽ không tự xóa.');"><input type="hidden" name="ma_sv" value="{{ item.ma_sv }}"><button class="btn small danger" type="submit">Xóa</button></form></td></tr>{% else %}<tr><td colspan="5" class="empty">Không có dữ liệu</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}
