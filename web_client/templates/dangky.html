@@ -2,27 +2,42 @@
 {% block title %}Đăng ký{% endblock %}
 {% block content %}
 <div class="eyebrow">QUẢN LÝ / ĐĂNG KÝ</div><h1>Đăng ký đồ án tốt nghiệp</h1>
-<p class="lead">DangKy Service gọi API của hai service còn lại trước khi lưu đăng ký.</p>
-<div class="workspace">
-  <section class="panel form-panel"><h2>{{ 'Sửa đăng ký' if selected else 'Đăng ký đề tài' }}</h2><p class="subtle">Mỗi sinh viên đăng ký tối đa 1 đề tài</p>
+<p class="lead">{{ 'Xem trạng thái đăng ký của bạn hoặc chọn một đề tài đã được duyệt.' if current_role == 'sinhvien' else 'Ghi nhận đăng ký, duyệt hoặc từ chối yêu cầu của sinh viên.' }}</p>
+<div class="workspace{% if current_role != 'admin' %} read-only{% endif %}">
+  {% if can_register %}
+  <section class="panel form-panel"><h2>{{ 'Sửa đăng ký' if selected else 'Đăng ký đề tài' }}</h2><p class="subtle">Mỗi sinh viên chỉ có một đăng ký đang hoạt động</p>
+    {% if current_role == 'sinhvien' and students %}<p class="student-identity">{{ students[0].ho_ten }} <span>· {{ students[0].ma_sv }}</span></p>{% endif %}
     <form method="post" action="{{ url_for('save_registration') }}">
       <input type="hidden" name="mode" value="{{ 'edit' if selected else 'create' }}">
       {% if selected %}<input type="hidden" name="ma_dk" value="{{ selected.ma_dk }}">{% endif %}
+      {% if current_role == 'admin' %}
       <label>Sinh viên</label><select name="ma_sv" required><option value="">-- Chọn sinh viên --</option>
         {% for sv in students %}<option value="{{ sv.ma_sv }}" {% if selected and sv.ma_sv == selected.ma_sv %}selected{% endif %}>{{ sv.ma_sv }} · {{ sv.ho_ten }}</option>{% endfor %}
       </select>
-      <label>Đề tài</label><select name="ma_dt" required><option value="">-- Chọn đề tài --</option>
+      {% endif %}
+      <label>Đề tài đã được duyệt</label><select name="ma_dt" required><option value="">-- Chọn đề tài --</option>
         {% for dt in topics %}<option value="{{ dt.ma_dt }}" {% if selected and dt.ma_dt == selected.ma_dt %}selected{% endif %}>{{ dt.ma_dt }} · {{ dt.ten_dt }} (tối đa {{ dt.so_luong_toi_da }})</option>{% endfor %}
       </select>
+      {% if current_role == 'admin' %}
       <div class="form-two"><div><label>Điểm hướng dẫn</label><input name="diem_huong_dan" type="number" step="0.01" min="0" max="10" value="{{ selected.diem_huong_dan if selected and selected.diem_huong_dan is not none else '' }}" placeholder="0–10"></div><div><label>Điểm phản biện</label><input name="diem_phan_bien" type="number" step="0.01" min="0" max="10" value="{{ selected.diem_phan_bien if selected and selected.diem_phan_bien is not none else '' }}" placeholder="0–10"></div></div>
-      <div class="form-note">Điểm là tùy chọn. Công thức demo: (điểm hướng dẫn + điểm phản biện) / 2. Chưa có công thức chính thức từ giảng viên.</div>
+      {% endif %}
       <button class="btn primary" type="submit">{{ 'Lưu thay đổi' if selected else '+ Đăng ký đề tài' }}</button>
       {% if selected %}<a class="btn secondary" href="{{ url_for('dangky') }}">Hủy chỉnh sửa</a>{% endif %}
     </form>
   </section>
-  <section class="panel table-panel"><div class="panel-head"><h2>Danh sách đăng ký</h2><span class="count">{{ rows|length }} đăng ký</span></div>
-    <div class="table-wrap"><table><thead><tr><th>Mã DK</th><th>Sinh viên</th><th>Đề tài</th><th>Ngày đăng ký</th><th>Điểm TB</th><th>Thao tác</th></tr></thead><tbody>
-    {% for item in rows %}<tr><td><strong>#{{ item.ma_dk }}</strong></td><td>{{ item.ma_sv }}<small class="table-sub">{{ student_names.get(item.ma_sv, 'Chưa có dữ liệu SV') }}</small></td><td>{{ item.ma_dt }}<small class="table-sub">{{ topic_names.get(item.ma_dt, 'Chưa có dữ liệu ĐT') }}</small></td><td>{{ item.ngay_dang_ky }}</td><td>{% if item.diem_trung_binh is not none %}<span class="pill score">{{ '%.2f'|format(item.diem_trung_binh) }}</span>{% else %}—{% endif %}</td><td class="actions"><a class="btn small secondary" href="{{ url_for('dangky', edit=item.ma_dk) }}">Sửa</a><form method="post" action="{{ url_for('delete_registration') }}" onsubmit="return confirm('Xóa đăng ký #{{ item.ma_dk }}?');"><input type="hidden" name="ma_dk" value="{{ item.ma_dk }}"><button class="btn small danger" type="submit">Xóa</button></form></td></tr>{% else %}<tr><td colspan="6" class="empty">Chưa có đăng ký. Hãy tạo đăng ký đầu tiên để demo gọi API.</td></tr>{% endfor %}
+  {% elif current_role == 'sinhvien' and not student_profile_available %}
+  <p class="student-registration-note">Tài khoản này chưa được liên kết với hồ sơ sinh viên. Vui lòng liên hệ quản trị viên.</p>
+  {% elif current_role == 'sinhvien' and rows %}
+  <p class="student-registration-note">{% if rows[0].trang_thai == 'tu_choi' %}Yêu cầu đăng ký đã bị từ chối. Bạn có thể xóa yêu cầu này để chọn đề tài khác.{% elif rows[0].trang_thai == 'da_duyet' %}Đăng ký của bạn đã được duyệt.{% else %}Đăng ký của bạn đang chờ admin duyệt.{% endif %}</p>
+  {% elif current_role == 'sinhvien' and not topics_available %}
+  <p class="student-registration-note">Hiện chưa có đề tài đã duyệt để đăng ký. Bạn có thể gửi đề xuất trong mục Đề tài.</p>
+  {% endif %}
+  <section class="panel table-panel"><div class="panel-head"><h2>{{ 'Đăng ký của tôi' if current_role == 'sinhvien' else 'Danh sách đăng ký' }}</h2><span class="count">{{ rows|length }} đăng ký</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Mã DK</th><th>Sinh viên</th><th>Đề tài</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Điểm TB</th>{% if show_registration_actions %}<th>Thao tác</th>{% endif %}</tr></thead><tbody>
+    {% for item in rows %}<tr><td><strong>#{{ item.ma_dk }}</strong></td><td>{{ item.ma_sv }}<small class="table-sub">{{ student_names.get(item.ma_sv, 'Chưa có dữ liệu SV') }}</small></td><td>{{ item.ma_dt }}<small class="table-sub">{{ topic_names.get(item.ma_dt, 'Chưa có dữ liệu ĐT') }}</small></td><td>{{ item.ngay_dang_ky }}</td><td><span class="pill {{ 'approved' if item.trang_thai == 'da_duyet' else ('rejected' if item.trang_thai == 'tu_choi' else 'pending') }}">{{ 'Đã duyệt' if item.trang_thai == 'da_duyet' else ('Từ chối' if item.trang_thai == 'tu_choi' else 'Chờ duyệt') }}</span></td><td>{% if item.diem_trung_binh is not none %}<span class="pill score">{{ '%.2f'|format(item.diem_trung_binh) }}</span>{% else %}—{% endif %}</td>
+      {% if current_role == 'admin' %}<td class="actions">{% if item.trang_thai == 'cho_duyet' %}<form method="post" action="{{ url_for('approve_registration') }}"><input type="hidden" name="ma_dk" value="{{ item.ma_dk }}"><button class="btn small primary" type="submit">Duyệt</button></form><form method="post" action="{{ url_for('reject_registration') }}"><input type="hidden" name="ma_dk" value="{{ item.ma_dk }}"><button class="btn small danger" type="submit">Từ chối</button></form>{% endif %}<a class="btn small secondary" href="{{ url_for('dangky', edit=item.ma_dk) }}">Sửa</a><form method="post" action="{{ url_for('delete_registration') }}" onsubmit="return confirm('Xóa đăng ký #{{ item.ma_dk }}?');"><input type="hidden" name="ma_dk" value="{{ item.ma_dk }}"><button class="btn small danger" type="submit">Xóa</button></form></td>
+      {% elif current_role == 'sinhvien' and item.trang_thai in ['cho_duyet', 'tu_choi'] %}<td class="actions"><form method="post" action="{{ url_for('delete_registration') }}" onsubmit="return confirm('Xóa yêu cầu đăng ký này?');"><input type="hidden" name="ma_dk" value="{{ item.ma_dk }}"><button class="btn small danger" type="submit">{{ 'Hủy đăng ký' if item.trang_thai == 'cho_duyet' else 'Xóa yêu cầu bị từ chối' }}</button></form></td>{% endif %}</tr>
+    {% else %}<tr><td colspan="{{ 7 if current_role == 'admin' else (6 if show_registration_actions else 5) }}" class="empty">Chưa có đăng ký.</td></tr>{% endfor %}
     </tbody></table></div>
   </section>
 </div>

@@ -1,11 +1,16 @@
 """SinhVien service: owns its own SQLite database and CRUD APIs."""
 import os
+import sys
 import re
 import sqlite3
 from pathlib import Path
 from flask import Flask, g, jsonify, request
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from common.jwt_auth import protect  # noqa: E402
+
 app = Flask(__name__)
+protect(app)  # moi request (tru /api/health) phai co JWT hop le
 DATA_DIR = Path(os.environ.get('SOA_DATA_DIR', Path(__file__).resolve().parent.parent / 'data'))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DB_FILE = DATA_DIR / 'sinhvien.sqlite3'
@@ -68,7 +73,13 @@ def health():
 
 @app.get('/api/sinhvien')
 def list_students():
-    rows = db().execute('SELECT * FROM sinhvien ORDER BY ma_sv').fetchall()
+    if g.user.get('role') == 'sinhvien':
+        ma_sv = g.user.get('ma_sv')
+        if not ma_sv:
+            return error('Tai khoan sinh vien chua duoc gan ma sinh vien', 403)
+        rows = db().execute('SELECT * FROM sinhvien WHERE ma_sv=?', (ma_sv,)).fetchall()
+    else:
+        rows = db().execute('SELECT * FROM sinhvien ORDER BY ma_sv').fetchall()
     return jsonify([dict(row) for row in rows])
 
 

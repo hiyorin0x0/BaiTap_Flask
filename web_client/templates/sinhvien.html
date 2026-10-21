@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Sinh viên{% endblock %}
 {% block content %}
-<div class="eyebrow">QUẢN LÝ / SINH VIÊN</div><h1>Danh sách sinh viên</h1>
-<p class="lead">Dữ liệu do SinhVien Service (cổng 5001) quản lý và trả về dưới dạng JSON.</p>
-<div class="workspace">
+<div class="eyebrow">{{ 'SINH VIÊN / HỒ SƠ CÁ NHÂN' if current_role == 'sinhvien' else 'QUẢN LÝ / SINH VIÊN' }}</div><h1>{{ 'Thông tin của tôi' if current_role == 'sinhvien' else 'Danh sách sinh viên' }}</h1>
+<p class="lead">{{ 'Thông tin hồ sơ được liên kết với tài khoản của bạn.' if current_role == 'sinhvien' else 'Quản lý thông tin liên hệ và lớp của sinh viên.' }}</p>
+<div class="workspace{% if current_role != 'admin' %} read-only{% endif %}">
+  {% if current_role == 'sinhvien' and not profile_available %}<p class="student-registration-note">Tài khoản này chưa được liên kết với hồ sơ sinh viên. Vui lòng liên hệ quản trị viên.</p>{% endif %}
+  {% if current_role == 'admin' %}
   <section class="panel form-panel">
     <h2>{{ 'Sửa sinh viên' if selected else 'Thêm sinh viên' }}</h2>
     <p class="subtle">{{ 'Cập nhật thông tin sinh viên đang chọn' if selected else 'Nhập thông tin sinh viên mới' }}</p>
@@ -17,9 +19,10 @@
       {% if selected %}<a class="btn secondary" href="{{ url_for('sinhvien') }}">Hủy chỉnh sửa</a>{% endif %}
     </form>
   </section>
-  <section class="panel table-panel"><div class="panel-head"><h2>Sinh viên hiện có</h2><span class="count">{{ rows|length }} sinh viên</span></div>
-    <div class="table-wrap"><table><thead><tr><th>Mã SV</th><th>Họ tên</th><th>Lớp</th><th>Email</th><th>Thao tác</th></tr></thead><tbody>
-    {% for item in rows %}<tr><td><strong>{{ item.ma_sv }}</strong></td><td>{{ item.ho_ten }}</td><td>{{ item.lop }}</td><td>{{ item.email }}</td><td class="actions"><a class="btn small secondary" href="{{ url_for('sinhvien', edit=item.ma_sv) }}">Sửa</a><form method="post" action="{{ url_for('delete_student') }}" onsubmit="return confirm('Xóa sinh viên {{ item.ma_sv }}? Nếu đã có đăng ký, dữ liệu liên quan sẽ không tự xóa.');"><input type="hidden" name="ma_sv" value="{{ item.ma_sv }}"><button class="btn small danger" type="submit">Xóa</button></form></td></tr>{% else %}<tr><td colspan="5" class="empty">Không có dữ liệu</td></tr>{% endfor %}
+  {% endif %}
+  <section class="panel table-panel"><div class="panel-head"><h2>{{ 'Hồ sơ cá nhân' if current_role == 'sinhvien' else 'Sinh viên hiện có' }}</h2><span class="count">{{ rows|length }} sinh viên</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Mã SV</th><th>Họ tên</th><th>Lớp</th><th>Email</th>{% if current_role == 'admin' %}<th>Thao tác</th>{% endif %}</tr></thead><tbody>
+    {% for item in rows %}<tr><td><strong>{{ item.ma_sv }}</strong></td><td>{{ item.ho_ten }}</td><td>{{ item.lop }}</td><td>{{ item.email }}</td>{% if current_role == 'admin' %}<td class="actions"><a class="btn small secondary" href="{{ url_for('sinhvien', edit=item.ma_sv) }}">Sửa</a><form method="post" action="{{ url_for('delete_student') }}" onsubmit="return confirm('Xóa sinh viên {{ item.ma_sv }}? Nếu đã có đăng ký, dữ liệu liên quan sẽ không tự xóa.');"><input type="hidden" name="ma_sv" value="{{ item.ma_sv }}"><button class="btn small danger" type="submit">Xóa</button></form></td>{% endif %}</tr>{% else %}<tr><td colspan="{{ 5 if current_role == 'admin' else 4 }}" class="empty">Không có dữ liệu</td></tr>{% endfor %}
     </tbody></table></div>
   </section>
 </div>

@@ -1,25 +1,27 @@
 {% extends 'base.html' %}
 {% block title %}Tổng quan{% endblock %}
 {% block content %}
-<div class="eyebrow">DASHBOARD / TỔNG QUAN</div>
-<h1>Quản lý đồ án tốt nghiệp</h1>
-<p class="lead">Hệ thống minh họa kiến trúc hướng dịch vụ. Ba Flask REST API hoạt động độc lập và được sử dụng qua giao diện Client.</p>
-<div class="metrics">
-  <a class="metric" href="{{ url_for('sinhvien') }}"><span class="metric-icon indigo">♙</span><strong>Sinh viên</strong><small>Thêm · Sửa · Xóa · Xem</small><span class="metric-link">Quản lý →</span></a>
-  <a class="metric" href="{{ url_for('detai') }}"><span class="metric-icon emerald">▤</span><strong>Đề tài</strong><small>Tên đề tài · Số lượng tối đa</small><span class="metric-link">Quản lý →</span></a>
-  <a class="metric" href="{{ url_for('dangky') }}"><span class="metric-icon orange">✓</span><strong>Đăng ký</strong><small>Kiểm tra liên dịch vụ qua HTTP</small><span class="metric-link">Quản lý →</span></a>
+<div class="page-heading">
+  <div class="eyebrow">TỔNG QUAN</div>
+  <h1>{{ 'Không gian sinh viên' if current_role == 'sinhvien' else 'Quản lý đồ án tốt nghiệp' }}</h1>
+  <p class="lead">{{ 'Xem thông tin cá nhân, đề tài và đăng ký đồ án.' if current_role == 'sinhvien' else 'Chọn một phân hệ để tiếp tục công việc.' }}</p>
 </div>
-<section class="panel">
-  <div class="panel-head"><div><h2>Trạng thái dịch vụ</h2><p>Các backend chạy trên cổng khác nhau</p></div><span class="hint">API HEALTH</span></div>
-  <div class="status-grid">
+<div class="dashboard-grid{% if current_role != 'admin' %} read-only{% endif %}">
+  <section class="module-list">
+    <div class="section-heading"><span>{{ 'KHÔNG GIAN SINH VIÊN' if current_role == 'sinhvien' else 'PHÂN HỆ QUẢN LÝ' }}</span><h2>{{ 'Thông tin và đăng ký' if current_role == 'sinhvien' else 'Danh mục' }}</h2></div>
+    <a class="module-row" href="{{ url_for('sinhvien') }}"><span class="module-index">01</span><span class="module-copy"><strong>{{ 'Thông tin của tôi' if current_role == 'sinhvien' else 'Sinh viên' }}</strong><small>{{ 'Xem hồ sơ, lớp và thông tin liên hệ' if current_role == 'sinhvien' else 'Thông tin cá nhân, lớp và liên hệ' }}</small></span><span class="module-arrow">→</span></a>
+    <a class="module-row" href="{{ url_for('detai') }}"><span class="module-index">02</span><span class="module-copy"><strong>Đề tài</strong><small>{{ 'Xem đề tài đã duyệt hoặc gửi đề xuất mới' if current_role == 'sinhvien' else 'Tên đề tài, mô tả và số lượng đăng ký' }}</small></span><span class="module-arrow">→</span></a>
+    <a class="module-row" href="{{ url_for('dangky') }}"><span class="module-index">03</span><span class="module-copy"><strong>{{ 'Đăng ký đề tài' if current_role == 'sinhvien' else 'Đăng ký' }}</strong><small>{{ 'Xem hoặc tạo đăng ký của bạn' if current_role == 'sinhvien' else 'Phân công sinh viên vào đề tài' }}</small></span><span class="module-arrow">→</span></a>
+  </section>
+  {% if current_role == 'admin' %}
+  <section class="service-list">
+    <div class="section-heading"><span>KẾT NỐI HỆ THỐNG</span><h2>Trạng thái dịch vụ</h2></div>
+    <div class="service-caption">Tình trạng kết nối hiện tại</div>
+    {% set service_labels = {'sinhvien': 'Sinh viên', 'detai': 'Đề tài', 'dangky': 'Đăng ký', 'auth': 'Đăng nhập'} %}
     {% for name, ok in status.items() %}
-      <div class="status-row"><span class="status-dot {% if ok %}online{% endif %}"></span><div><strong>{{ name|capitalize }} Service</strong><small>{{ services[name] }}</small></div><span class="status-tag {% if ok %}ok{% else %}off{% endif %}">{{ 'Đang chạy' if ok else 'Không kết nối' }}</span></div>
+      <div class="status-row"><span class="status-dot {% if ok %}online{% endif %}"></span><strong>{{ service_labels[name] }}</strong><span class="status-tag {% if ok %}ok{% else %}off{% endif %}">{{ 'Đang hoạt động' if ok else 'Tạm gián đoạn' }}</span></div>
     {% endfor %}
-  </div>
-</section>
-<section class="panel">
-  <div class="panel-head"><div><h2>Luồng hoạt động SOA</h2><p>Ví dụ khi đăng ký một đề tài</p></div></div>
-  <div class="steps"><div class="step"><b>1</b><span>Client gửi POST /api/dangky</span></div><div class="arrow">→</div><div class="step"><b>2</b><span>DangKy gọi SinhVien + DeTai qua REST</span></div><div class="arrow">→</div><div class="step"><b>3</b><span>Kiểm tra sức chứa và lưu SQLite</span></div></div>
-  <div class="note"><strong>Gợi ý trình bày:</strong> Tạo một sinh viên, tạo một đề tài, đăng ký đề tài; sau đó thử đăng ký lại cùng sinh viên để cho thấy quy tắc kiểm tra trùng. Thử dừng dịch vụ Đề tài để chứng minh các dịch vụ chạy độc lập và sự phụ thuộc HTTP khi đăng ký.</div>
-</section>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}

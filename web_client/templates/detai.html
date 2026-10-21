@@ -1,23 +1,37 @@
 {% extends 'base.html' %}
 {% block title %}Đề tài{% endblock %}
 {% block content %}
-<div class="eyebrow">QUẢN LÝ / ĐỀ TÀI</div><h1>Danh sách đề tài</h1>
-<p class="lead">Dữ liệu do DeTai Service (cổng 5002) quản lý và trả về dưới dạng JSON.</p>
-<div class="workspace">
-  <section class="panel form-panel"><h2>{{ 'Sửa đề tài' if selected else 'Thêm đề tài' }}</h2><p class="subtle">Khai báo đề tài cho sinh viên đăng ký</p>
+<div class="eyebrow">{{ 'SINH VIÊN / ĐỀ XUẤT' if current_role == 'sinhvien' else 'QUẢN LÝ / ĐỀ TÀI' }}</div>
+<h1>{{ 'Đề tài và đề xuất của tôi' if current_role == 'sinhvien' else 'Danh sách đề tài' }}</h1>
+<p class="lead">{% if current_role == 'sinhvien' %}Chọn đề tài đã được duyệt hoặc gửi đề xuất mới để admin xem xét.{% elif current_role == 'admin' %}Quản lý đề tài, xem đề xuất và duyệt hoặc từ chối đề tài sinh viên gửi.{% else %}Danh sách đề tài đã được duyệt và mở cho sinh viên đăng ký.{% endif %}</p>
+<div class="workspace{% if current_role != 'admin' %} read-only{% endif %}">
+  {% if current_role == 'admin' %}
+  <section class="panel form-panel"><h2>{{ 'Sửa đề tài' if selected else 'Thêm đề tài' }}</h2><p class="subtle">Đề tài do quản trị viên thêm sẽ được công bố ngay</p>
     <form method="post" action="{{ url_for('save_topic') }}">
       <input type="hidden" name="mode" value="{{ 'edit' if selected else 'create' }}">
       <label>Mã đề tài</label><input name="ma_dt" required maxlength="20" value="{{ selected.ma_dt if selected else '' }}" {% if selected %}readonly{% endif %} placeholder="DT004">
       <label>Tên đề tài</label><input name="ten_dt" required maxlength="200" value="{{ selected.ten_dt if selected else '' }}" placeholder="Ứng dụng web...">
       <label>Mô tả</label><textarea name="mo_ta" rows="3" maxlength="1000" placeholder="Mô tả ngắn">{{ selected.mo_ta if selected else '' }}</textarea>
       <label>Số sinh viên tối đa</label><input name="so_luong_toi_da" type="number" min="1" max="100" required value="{{ selected.so_luong_toi_da if selected else 2 }}">
-      <button class="btn primary" type="submit">{{ 'Lưu thay đổi' if selected else '+ Thêm đề tài' }}</button>
+      <button class="btn primary" type="submit">{{ 'Lưu thay đổi' if selected else '+ Thêm và công bố đề tài' }}</button>
       {% if selected %}<a class="btn secondary" href="{{ url_for('detai') }}">Hủy chỉnh sửa</a>{% endif %}
     </form>
   </section>
-  <section class="panel table-panel"><div class="panel-head"><h2>Đề tài hiện có</h2><span class="count">{{ rows|length }} đề tài</span></div>
-    <div class="table-wrap"><table><thead><tr><th>Mã ĐT</th><th>Tên đề tài</th><th>Mô tả</th><th>Tối đa</th><th>Thao tác</th></tr></thead><tbody>
-    {% for item in rows %}<tr><td><strong>{{ item.ma_dt }}</strong></td><td>{{ item.ten_dt }}</td><td>{{ item.mo_ta }}</td><td><span class="pill">{{ item.so_luong_toi_da }} SV</span></td><td class="actions"><a class="btn small secondary" href="{{ url_for('detai', edit=item.ma_dt) }}">Sửa</a><form method="post" action="{{ url_for('delete_topic') }}" onsubmit="return confirm('Xóa đề tài {{ item.ma_dt }}? Nếu đã có đăng ký, dữ liệu liên quan sẽ không tự xóa.');"><input type="hidden" name="ma_dt" value="{{ item.ma_dt }}"><button class="btn small danger" type="submit">Xóa</button></form></td></tr>{% else %}<tr><td colspan="5" class="empty">Không có dữ liệu</td></tr>{% endfor %}
+  {% elif current_role == 'sinhvien' %}
+  <section class="panel form-panel"><h2>Đề xuất đề tài mới</h2><p class="subtle">Đề tài chỉ xuất hiện trong danh sách đăng ký sau khi được duyệt.</p>
+    <form method="post" action="{{ url_for('propose_topic') }}">
+      <label>Tên đề tài</label><input name="ten_dt" required maxlength="200" placeholder="Ví dụ: Hệ thống quản lý phòng thí nghiệm">
+      <label>Mô tả / lý do đề xuất</label><textarea name="mo_ta" rows="4" maxlength="1000" placeholder="Nêu mục tiêu và phạm vi dự kiến"></textarea>
+      <p class="form-note">Mã đề tài được tạo tự động. Chỉ admin có thể duyệt và đặt số lượng đăng ký.</p>
+      <button class="btn primary" type="submit">Gửi đề xuất chờ duyệt</button>
+    </form>
+  </section>
+  {% endif %}
+  <section class="panel table-panel"><div class="panel-head"><h2>{{ 'Danh mục và đề xuất của tôi' if current_role == 'sinhvien' else 'Đề tài hiện có' }}</h2><span class="count">{{ rows|length }} đề tài</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Mã ĐT</th><th>Tên đề tài</th><th>Mô tả</th><th>Tối đa</th><th>Trạng thái</th>{% if current_role == 'admin' %}<th>Người đề xuất</th><th>Thao tác</th>{% endif %}</tr></thead><tbody>
+    {% for item in rows %}<tr><td><strong>{{ item.ma_dt }}</strong></td><td>{{ item.ten_dt }}</td><td>{{ item.mo_ta }}</td><td><span class="pill">{{ item.so_luong_toi_da }} SV</span></td><td><span class="pill {{ 'approved' if item.trang_thai == 'da_duyet' else ('rejected' if item.trang_thai == 'tu_choi' else 'pending') }}">{{ 'Đã duyệt' if item.trang_thai == 'da_duyet' else ('Từ chối' if item.trang_thai == 'tu_choi' else 'Chờ duyệt') }}</span></td>
+      {% if current_role == 'admin' %}<td>{{ item.nguoi_de_xuat_ma_sv or '—' }}</td><td class="actions">{% if item.trang_thai == 'cho_duyet' %}<form method="post" action="{{ url_for('approve_topic') }}"><input type="hidden" name="ma_dt" value="{{ item.ma_dt }}"><button class="btn small primary" type="submit">Duyệt</button></form><form method="post" action="{{ url_for('reject_topic') }}"><input type="hidden" name="ma_dt" value="{{ item.ma_dt }}"><button class="btn small danger" type="submit">Từ chối</button></form>{% endif %}<a class="btn small secondary" href="{{ url_for('detai', edit=item.ma_dt) }}">Sửa</a><form method="post" action="{{ url_for('delete_topic') }}" onsubmit="return confirm('Xóa đề tài {{ item.ma_dt }}?');"><input type="hidden" name="ma_dt" value="{{ item.ma_dt }}"><button class="btn small danger" type="submit">Xóa</button></form></td>{% endif %}</tr>
+    {% else %}<tr><td colspan="{{ 7 if current_role == 'admin' else 5 }}" class="empty">Chưa có đề tài hoặc đề xuất.</td></tr>{% endfor %}
     </tbody></table></div>
   </section>
 </div>

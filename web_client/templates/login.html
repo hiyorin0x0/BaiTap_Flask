@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đăng nhập · Trường Đại học Quy Nhơn</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=7) }}">
+</head>
+<body>
+  <main class="login-shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    <div class="login-brand">
+      <img src="{{ url_for('static', filename='qnu-logo.jpg') }}" alt="Logo Trường Đại học Quy Nhơn">
+      <div><strong>TRƯỜNG ĐẠI HỌC QUY NHƠN</strong><span>QUẢN LÝ ĐỒ ÁN TỐT NGHIỆP</span></div>
+    </div>
+    <section class="panel form-panel login-panel">
+      <div class="eyebrow">CỔNG ĐĂNG NHẬP</div>
+      <h1>Đăng nhập hệ thống</h1>
+      <form method="post">
+        <label>Tên đăng nhập</label><input name="username" required autofocus>
+        <label>Mật khẩu</label><input name="password" type="password" required>
+        <button class="btn primary" type="submit">Đăng nhập</button>
+      </form>
+      <div class="form-note"><strong>Tài khoản dùng thử:</strong><br>admin / admin123 — quản trị, duyệt đề tài và đăng ký<br>viewer / viewer123 — chỉ xem dữ liệu đã công bố<br>sv001 / sv001123 — xem hồ sơ SV001, đăng ký và đề xuất đề tài</div>
+    </section>
+  </main>
+</body>
+</html>

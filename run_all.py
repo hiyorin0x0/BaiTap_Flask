@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 APPS = [
+    'auth_service/app.py',
     'sinhvien_service/app.py',
     'detai_service/app.py',
     'dangky_service/app.py',
@@ -28,7 +29,7 @@ def main():
             if proc.poll() is not None:
                 raise RuntimeError(f'{script} khong khoi dong (ma thoat {proc.returncode})')
         print('\nTruy cap: http://127.0.0.1:' + env.get('WEB_PORT', '5000'))
-        print('Nhan Ctrl+C de tat ca 4 ung dung.\n', flush=True)
+        print('Nhan Ctrl+C de tat ca 5 ung dung. Tai khoan: admin/admin123, viewer/viewer123, sv001/sv001123\n', flush=True)
         while True:
             for proc in workers:
                 if proc.poll() is not None:

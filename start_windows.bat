@@ -17,7 +17,7 @@ if not exist ".venv\Scripts\python.exe" (
     pause
     exit /b 1
 )
-echo [2/3] Installing libraries from requirements.txt...
+echo [2/3] Installing libraries (Flask, requests, PyJWT)...
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 (
     echo ERROR: Cannot install Flask/requests. Check internet and Python.

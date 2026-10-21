@@ -3,25 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}SOA Flask Demo{% endblock %} · SOA Graduation</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>{% block title %}Quản lý đồ án tốt nghiệp{% endblock %} · Trường Đại học Quy Nhơn</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=7) }}">
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">S</span><span>SOA<span class="brand-light"> Project</span></span></a>
-      <span class="topbar-note">Flask · REST API · SQLite</span>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="brand" href="{{ url_for('index') }}">
+        <img class="brand-logo" src="{{ url_for('static', filename='qnu-logo.jpg') }}" alt="Logo Trường Đại học Quy Nhơn">
+        <span class="brand-copy"><small>TRƯỜNG ĐẠI HỌC QUY NHƠN</small><strong>QUẢN LÝ ĐỒ ÁN TỐT NGHIỆP</strong></span>
+      </a>
+      {% set role_labels = {'admin': 'Quản trị viên', 'viewer': 'Chỉ xem', 'sinhvien': 'Sinh viên'} %}
+      {% if current_user %}<div class="account-bar"><span class="account-name">{{ current_user }} <small>{{ role_labels.get(current_role, current_role) }}</small></span>
+        <form method="post" action="{{ url_for('logout') }}"><button class="btn signout" type="submit">Đăng xuất</button></form></div>{% endif %}
     </div>
   </header>
-  <div class="page-grid">
-    <aside class="sidebar">
-      <div class="sidebar-label">MENU</div>
-      <a href="{{ url_for('index') }}" class="nav {% if request.endpoint == 'index' %}active{% endif %}">⌂ &nbsp; Tổng quan</a>
-      <a href="{{ url_for('sinhvien') }}" class="nav {% if request.endpoint == 'sinhvien' %}active{% endif %}">♙ &nbsp; Sinh viên</a>
-      <a href="{{ url_for('detai') }}" class="nav {% if request.endpoint == 'detai' %}active{% endif %}">▤ &nbsp; Đề tài</a>
-      <a href="{{ url_for('dangky') }}" class="nav {% if request.endpoint == 'dangky' %}active{% endif %}">✓ &nbsp; Đăng ký</a>
-      <div class="sidebar-bottom"><span class="dot"></span> Phiên bản demo · 2026</div>
-    </aside>
+  <nav class="primary-nav" aria-label="Điều hướng chính">
+    <div class="primary-nav-inner">
+      <a href="{{ url_for('index') }}" class="nav {% if request.endpoint == 'index' %}active{% endif %}">Tổng quan</a>
+      <a href="{{ url_for('sinhvien') }}" class="nav {% if request.endpoint == 'sinhvien' %}active{% endif %}">{{ 'Thông tin của tôi' if current_role == 'sinhvien' else 'Sinh viên' }}</a>
+      <a href="{{ url_for('detai') }}" class="nav {% if request.endpoint == 'detai' %}active{% endif %}">Đề tài</a>
+      <a href="{{ url_for('dangky') }}" class="nav {% if request.endpoint == 'dangky' %}active{% endif %}">Đăng ký</a>
+    </div>
+  </nav>
+  <div class="site-shell">
     <main class="content">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
@@ -29,7 +34,6 @@
         {% endfor %}
       {% endwith %}
       {% block content %}{% endblock %}
-      <footer>Demo môn Kiến trúc hướng dịch vụ (SOA) · Dữ liệu minh họa, chưa phải CSDL chính thức</footer>
     </main>
   </div>
 </body>

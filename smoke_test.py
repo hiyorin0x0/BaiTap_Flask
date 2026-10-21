@@ -8,9 +8,12 @@ import requests
 SV = os.environ.get('SINHVIEN_URL', 'http://127.0.0.1:5001').rstrip('/') + '/api/sinhvien'
 DT = os.environ.get('DETAI_URL', 'http://127.0.0.1:5002').rstrip('/') + '/api/detai'
 DK = os.environ.get('DANGKY_URL', 'http://127.0.0.1:5003').rstrip('/') + '/api/dangky'
+AUTH = os.environ.get('AUTH_URL', 'http://127.0.0.1:5004').rstrip('/') + '/api/auth'
+HEADERS = {}  # se chua JWT cua admin sau khi dang nhap
 
 
 def check(method, url, status, **kwargs):
+    kwargs.setdefault('headers', HEADERS)
     response = requests.request(method, url, timeout=5, **kwargs)
     if response.status_code != status:
         raise AssertionError(f'{method} {url}: expected {status}, got {response.status_code}: {response.text}')
@@ -24,6 +27,18 @@ def main():
     registration_id = None
     print('Starting SOA integration test (requires running services)...')
     try:
+        # --- JWT ---
+        check('POST', AUTH + '/login', 401, json={'username': 'admin', 'password': 'sai'}, headers={})
+        admin = check('POST', AUTH + '/login', 200, json={'username': 'admin', 'password': 'admin123'}, headers={})
+        viewer = check('POST', AUTH + '/login', 200, json={'username': 'viewer', 'password': 'viewer123'}, headers={})
+        HEADERS['Authorization'] = 'Bearer ' + admin['access_token']
+        check('GET', SV, 401, headers={})                                             # khong co token
+        check('GET', SV, 401, headers={'Authorization': 'Bearer abc.def.ghi'})        # token gia
+        check('GET', SV, 200, headers={'Authorization': 'Bearer ' + viewer['access_token']})   # viewer duoc xem
+        check('POST', SV, 403, headers={'Authorization': 'Bearer ' + viewer['access_token']},  # viewer khong duoc ghi
+              json={'ma_sv': 'X1', 'ho_ten': 'x', 'lop': 'x', 'email': 'x@x.vn'})
+        print('  [OK] JWT: 401 khong token / token gia, 403 sai quyen, admin day du quyen')
+        # --- CRUD + lien dich vu ---
         for url in [SV, DT, DK]:
             check('GET', url, 200)
         check('POST', SV, 201, json={'ma_sv': s1, 'ho_ten': 'Demo A', 'lop': 'TEST01', 'email': f'{s1.lower()}@example.edu.vn'})
@@ -52,7 +67,7 @@ def main():
         # Cleanup test-only data; ignore any cleanup failure and leave real demo data untouched.
         for url in ([DK + '/' + str(registration_id)] if registration_id is not None else []) + [SV + '/' + s1, SV + '/' + s2, DT + '/' + topic]:
             try:
-                requests.delete(url, timeout=3)
+                requests.delete(url, timeout=3, headers=HEADERS)
             except requests.RequestException:
                 pass
 

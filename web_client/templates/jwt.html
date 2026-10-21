@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Token JWT{% endblock %}
+{% block content %}
+<div class="eyebrow">AUTH / TOKEN JWT</div>
+<h1>Token JWT của phiên hiện tại</h1>
+<p class="lead">Auth Service phát hành token sau khi đăng nhập. Mọi lời gọi tới SinhVien / DeTai / DangKy đều gửi kèm token này trong header <code>Authorization: Bearer ...</code>.</p>
+<section class="panel"><div class="panel-head"><h2>Token đầy đủ</h2><span class="hint">Header.Payload.Signature</span></div>
+  <pre style="white-space:pre-wrap;word-break:break-all;font-size:12px;margin:0">{{ token }}</pre></section>
+<div class="metrics">
+  <section class="panel"><h2>1. Header</h2><pre style="margin:0;font-size:13px">{{ head }}</pre><small>Thuật toán ký</small></section>
+  <section class="panel"><h2>2. Payload</h2><pre style="margin:0;font-size:13px">{{ payload }}</pre><small>sub = user · role = quyền · exp = hạn (Unix time)</small></section>
+  <section class="panel"><h2>3. Signature</h2><pre style="margin:0;font-size:12px;white-space:pre-wrap;word-break:break-all">{{ signature }}</pre><small>HMAC-SHA256 từ Header + Payload + secret</small></section>
+</div>
+<div class="note"><strong>Lưu ý:</strong> Header và Payload chỉ mã hóa Base64, ai cũng đọc được. Chữ ký mới đảm bảo không bị sửa đổi, vì vậy không đặt mật khẩu trong payload.</div>
+{% endblock %}
